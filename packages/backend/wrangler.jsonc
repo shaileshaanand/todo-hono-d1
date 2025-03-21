@@ -21,13 +21,13 @@
   //     "bucket_name": "my-bucket"
   //   }
   // ],
-  // "d1_databases": [
-  //   {
-  //     "binding": "MY_DB",
-  //     "database_name": "my-database",
-  //     "database_id": ""
-  //   }
-  // ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "todo-app-prod",
+      "database_id": "1866ff7f-f513-4c68-b2a2-f818425a4336",
+    },
+  ],
   // "ai": {
   //   "binding": "AI"
   // },
