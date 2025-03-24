@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import * as schema from "./db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { swaggerUI } from "@hono/swagger-ui";
+import { desc, eq } from "drizzle-orm";
 
 export type Env = {
   DB: D1Database;
@@ -12,30 +12,39 @@ export type Env = {
 
 const app = new Hono<{ Bindings: Env }>();
 
+const todoInsertValidator = z.object({
+  title: z.string().min(3),
+  deadline: z.coerce.date().optional(),
+});
+
 export const routes = app.use(cors());
 app
-  .get("/swagger", swaggerUI({ url: "/todo" }))
   .get("/todo", async (c) => {
     const db = drizzle(c.env.DB, { schema });
-    const todos = await db.query.todos.findMany();
+    const todos = await db.query.todos.findMany({
+      orderBy: [desc(schema.todos.createdAt)],
+      where: eq(schema.todos.deleted, false),
+    });
     return c.json(todos);
   })
-  .post(
-    "/todo",
-    zValidator(
-      "json",
-      z.object({
-        title: z.string().min(3),
-        deadline: z.coerce.date().optional(),
-      })
-    ),
-    async (c) => {
+  .post("/todo", zValidator("json", todoInsertValidator), async (c) => {
+    const db = drizzle(c.env.DB, { schema });
+    const todo = await db
+      .insert(schema.todos)
+      .values(c.req.valid("json"))
+      .returning();
+    return c.json(todo);
+  })
+  .put(
+    "/todos/:id",
+    zValidator("param", z.coerce.number()),
+    zValidator("json", todoInsertValidator),
+    (c) => {
       const db = drizzle(c.env.DB, { schema });
-      const todo = await db
-        .insert(schema.todos)
-        .values(c.req.valid("json"))
-        .returning();
-      return c.json(todo);
+      db.update(schema.todos)
+        .set(c.req.valid("json"))
+        .where(eq(schema.todos.id, c.req.valid("param")));
+      return c.json({});
     }
   );
 

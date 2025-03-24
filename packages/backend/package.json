@@ -5,15 +5,17 @@
     "deploy": "wrangler deploy --minify"
   },
   "dependencies": {
-    "@hono/swagger-ui": "^0.5.1",
     "@hono/zod-validator": "^0.4.3",
     "drizzle-orm": "^0.40.1",
     "hono": "^4.7.5",
+    "vitest": "~3.0.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.4",
     "@cloudflare/workers-types": "^4.20250214.0",
     "drizzle-kit": "^0.30.5",
+    "miniflare": "^4.20250320.0",
     "prettier": "^3.5.3",
     "wrangler": "^3.109.2"
   }
