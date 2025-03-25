@@ -11,7 +11,7 @@ function App() {
   useEffect(() => {
     const client = hc<typeof routes>("http://localhost:8787/");
     console.log("EFFECT");
-    client.index
+    client.todo
       .$get()
       .then((r) => {
         r.ok;
