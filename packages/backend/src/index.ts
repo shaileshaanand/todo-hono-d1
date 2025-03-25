@@ -6,9 +6,9 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
 
-export type Env = {
+export interface Env {
   DB: D1Database;
-};
+}
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -17,10 +17,11 @@ const todoInsertValidator = z.object({
   deadline: z.coerce.date().optional(),
 });
 
-export const routes = app.use(cors());
-app
+export const routes = app
+  .use(cors())
   .get("/todo", async (c) => {
     const db = drizzle(c.env.DB, { schema });
+
     const todos = await db.query.todos.findMany({
       orderBy: [desc(schema.todos.createdAt)],
       where: eq(schema.todos.deleted, false),
@@ -36,7 +37,7 @@ app
     return c.json(todo);
   })
   .put(
-    "/todos/:id",
+    "/todo/:id",
     zValidator("param", z.coerce.number()),
     zValidator("json", todoInsertValidator),
     (c) => {

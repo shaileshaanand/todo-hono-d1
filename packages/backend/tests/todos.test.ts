@@ -1,28 +1,44 @@
 import { env } from "cloudflare:test";
-import { migrate } from "drizzle-orm/d1/migrator";
-import app, { type Env } from "../src/index";
+import { routes } from "../src/index";
 import { beforeAll, describe, expect, it } from "vitest";
-import { drizzle } from "drizzle-orm/d1";
+import { testClient } from "hono/testing";
+import { drizzle, DrizzleD1Database } from "drizzle-orm/d1";
+import * as schema from "../src/db/schema";
 
-declare module "cloudflare:test" {
-  interface ProvidedEnv extends Env {}
-}
-
-describe("Todos", () => {
-  beforeAll(async () => {
-    await migrate(drizzle(env.DB), {
-      migrationsFolder: "drizzle",
+let db: DrizzleD1Database<typeof schema>;
+const client = testClient(routes, env);
+describe("Example", () => {
+  beforeAll(() => {
+    db = drizzle(env.DB, { schema });
+  });
+  it("Should create a todo", async () => {
+    const payload = {
+      title: "Test 1",
+    };
+    const resp = await client.todo.$post({
+      json: payload,
     });
+    const responseTodo = await resp.json();
+
+    const createdTodos = await db.query.todos.findMany();
+    expect(createdTodos.length).toBe(1);
+    const [createdTodo] = createdTodos;
+    expect(createdTodo.title).toBe(payload.title);
+
+    expect(resp.status).toBe(200);
   });
 
-  it("should create a new todo", async () => {
-    const resp = await app.request(
-      "http://localhost/todo",
-      {
-        method: "GET",
-      },
-      env
-    );
+  it("Should list todos", async () => {
+    const insertedTodo = await db
+      .insert(schema.todos)
+      .values({
+        title: "Test 3",
+      })
+      .returning();
+
+    const resp = await client.todo.$get();
     expect(resp.status).toBe(200);
+    const data = await resp.json();
+    expect(data.length).toBe(1);
   });
 });
