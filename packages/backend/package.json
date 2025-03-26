@@ -5,10 +5,14 @@
     "deploy": "wrangler deploy --minify",
     "migrate:local": "wrangler d1 migrations apply DB --local"
   },
+  "lint-staged": {
+    "*": "prettier --write"
+  },
   "dependencies": {
     "@hono/zod-validator": "^0.4.3",
     "drizzle-orm": "^0.40.1",
     "hono": "^4.7.5",
+    "lint-staged": "^15.5.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -16,6 +20,7 @@
     "@cloudflare/workers-types": "^4.20250214.0",
     "@types/node": "^22.13.13",
     "drizzle-kit": "^0.30.5",
+    "husky": "^9.1.7",
     "prettier": "^3.5.3",
     "vitest": "^3.0.9",
     "wrangler": "^3.109.2"
