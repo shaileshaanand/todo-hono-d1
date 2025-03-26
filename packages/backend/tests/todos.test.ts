@@ -2,15 +2,13 @@ import { env } from "cloudflare:test";
 import { routes } from "../src/index";
 import { beforeAll, describe, expect, it } from "vitest";
 import { testClient } from "hono/testing";
-import { drizzle, DrizzleD1Database } from "drizzle-orm/d1";
+import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../src/db/schema";
 
-let db: DrizzleD1Database<typeof schema>;
 const client = testClient(routes, env);
+const db = drizzle(env.DB, { schema });
+
 describe("Example", () => {
-  beforeAll(() => {
-    db = drizzle(env.DB, { schema });
-  });
   it("Should create a todo", async () => {
     const payload = {
       title: "Test 1",
