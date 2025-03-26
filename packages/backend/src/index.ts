@@ -46,7 +46,7 @@ export const routes = app
         .set(c.req.valid("json"))
         .where(eq(schema.todos.id, c.req.valid("param")));
       return c.json({});
-    }
+    },
   );
 
 export default app;
