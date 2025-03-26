@@ -14,7 +14,8 @@ const app = new Hono<{ Bindings: Env }>();
 
 const todoInsertValidator = z.object({
   title: z.string().min(3),
-  deadline: z.coerce.date().optional(),
+  // deadline: z.coerce.date().optional(),
+  deadline: z.number().pipe(z.coerce.date()).optional(),
 });
 
 export const routes = app
@@ -25,16 +26,19 @@ export const routes = app
     const todos = await db.query.todos.findMany({
       orderBy: [desc(schema.todos.createdAt)],
       where: eq(schema.todos.deleted, false),
+      // columns: {
+      //   deleted: false,
+      // },
     });
     return c.json(todos);
   })
   .post("/todo", zValidator("json", todoInsertValidator), async (c) => {
     const db = drizzle(c.env.DB, { schema });
-    const todo = await db
+    const [{ deleted: _, ...todo }] = await db
       .insert(schema.todos)
       .values(c.req.valid("json"))
       .returning();
-    return c.json(todo);
+    return c.json(todo, 201);
   })
   .put(
     "/todo/:id",
