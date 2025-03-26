@@ -50,16 +50,79 @@ describe("Example", () => {
   });
 
   it("Should list todos", async () => {
-    const insertedTodo = await db
-      .insert(schema.todos)
-      .values({
-        title: "Test 3",
-      })
-      .returning();
+    const todoPayloads = [
+      {
+        title: faker.lorem.sentence(),
+        deadline: faker.date.future(),
+        done: true,
+        deleted: true,
+      },
+      {
+        title: faker.lorem.sentence(),
+        deadline: faker.date.future(),
+        done: false,
+        deleted: true,
+      },
+      {
+        title: faker.lorem.sentence(),
+        done: true,
+        deadline: faker.date.past(),
+      },
+      {
+        title: faker.lorem.sentence(),
+        done: false,
+      },
+      {
+        title: faker.lorem.sentence(),
+        done: true,
+        deadline: faker.date.past(),
+      },
+      {
+        title: faker.lorem.sentence(),
+        deadline: faker.date.past(),
+        done: false,
+      },
+    ];
+
+    const allTodos = (
+      await Promise.all(
+        todoPayloads.map((todoPayload) => {
+          return db.insert(schema.todos).values(todoPayload).returning();
+        }),
+      )
+    ).map((todos) => todos[0]);
+
+    const notDeletedTodos = allTodos.filter(
+      (todoPayload) => !todoPayload.deleted,
+    );
 
     const resp = await client.todo.$get();
     expect(resp.status).toBe(200);
     const data = await resp.json();
-    expect(data.length).toBe(1);
+
+    expect(data.length).toBe(4);
+    notDeletedTodos.map((notDeletedTodo) => {
+      const correspondingReturnedTodo = data.find(
+        (returnedTodo) => returnedTodo.id === notDeletedTodo.id,
+      );
+      expect(correspondingReturnedTodo).toBeDefined();
+      if (!correspondingReturnedTodo) throw new Error("Todo not found");
+      expect(correspondingReturnedTodo.title).toBe(notDeletedTodo.title);
+      expect(correspondingReturnedTodo.done).toBe(notDeletedTodo.done);
+      expect("deleted" in correspondingReturnedTodo).toBe(false);
+      if (notDeletedTodo.deadline) {
+        expect(correspondingReturnedTodo.deadline).toBe(
+          notDeletedTodo.deadline?.toISOString(),
+        );
+      } else {
+        expect(correspondingReturnedTodo.deadline).toBeNull();
+      }
+      expect(correspondingReturnedTodo.createdAt).toBe(
+        notDeletedTodo.createdAt.toISOString(),
+      );
+      expect(correspondingReturnedTodo.updatedAt).toBe(
+        notDeletedTodo.updatedAt.toISOString(),
+      );
+    });
   });
 });

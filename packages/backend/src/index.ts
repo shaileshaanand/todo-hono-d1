@@ -26,9 +26,9 @@ export const routes = app
     const todos = await db.query.todos.findMany({
       orderBy: [desc(schema.todos.createdAt)],
       where: eq(schema.todos.deleted, false),
-      // columns: {
-      //   deleted: false,
-      // },
+      columns: {
+        deleted: false,
+      },
     });
     return c.json(todos);
   })
