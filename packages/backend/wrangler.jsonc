@@ -1,5 +1,5 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "backend",
   "main": "src/index.ts",
   "compatibility_date": "2025-03-20",
@@ -26,6 +26,7 @@
       "binding": "DB",
       "database_name": "todo-app-prod",
       "database_id": "1866ff7f-f513-4c68-b2a2-f818425a4336",
+      "migrations_dir": "drizzle",
     },
   ],
   // "ai": {

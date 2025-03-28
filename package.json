@@ -6,7 +6,11 @@
   "workspaces": [
     "packages/*"
   ],
+  "lint-staged": {
+    "*": "prettier --write"
+  },
   "scripts": {
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   }
 }
