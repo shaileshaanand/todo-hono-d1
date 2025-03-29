@@ -9,7 +9,7 @@ import { faker } from "@faker-js/faker";
 const client = testClient(routes, env);
 const db = drizzle(env.DB, { schema });
 
-describe("Example", () => {
+describe("Todo tests", () => {
   it.each([
     {
       title: faker.lorem.sentence(),
@@ -84,13 +84,10 @@ describe("Example", () => {
       },
     ];
 
-    const allTodos = (
-      await Promise.all(
-        todoPayloads.map((todoPayload) => {
-          return db.insert(schema.todos).values(todoPayload).returning();
-        }),
-      )
-    ).map((todos) => todos[0]);
+    const allTodos = await db
+      .insert(schema.todos)
+      .values(todoPayloads)
+      .returning();
 
     const notDeletedTodos = allTodos.filter(
       (todoPayload) => !todoPayload.deleted,
@@ -112,7 +109,7 @@ describe("Example", () => {
       expect("deleted" in correspondingReturnedTodo).toBe(false);
       if (notDeletedTodo.deadline) {
         expect(correspondingReturnedTodo.deadline).toBe(
-          notDeletedTodo.deadline?.toISOString(),
+          notDeletedTodo.deadline.toISOString(),
         );
       } else {
         expect(correspondingReturnedTodo.deadline).toBeNull();
