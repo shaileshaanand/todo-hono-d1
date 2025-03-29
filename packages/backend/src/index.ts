@@ -67,8 +67,6 @@ export const routes = app
         },
       });
 
-      console.log(todo);
-
       if (!todo) return c.notFound();
       return c.json<typeof todo>(todo);
     },
