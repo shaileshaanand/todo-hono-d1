@@ -5,6 +5,7 @@ import { testClient } from "hono/testing";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../src/db/schema";
 import { faker } from "@faker-js/faker";
+import { todoFactory } from "./factories";
 
 const client = testClient(routes, env);
 const db = drizzle(env.DB, { schema });
@@ -121,5 +122,90 @@ describe("Todo tests", () => {
         notDeletedTodo.updatedAt.toISOString(),
       );
     });
+  });
+
+  it("Should get a todo", async () => {
+    const todo = await todoFactory(db);
+
+    const resp = await client.todo[":id"].$get({
+      param: { id: todo.id.toString() },
+    });
+    expect(resp.status).toBe(200);
+    if (resp.status === 200) {
+      const returnedTodo = await resp.json();
+
+      expect(returnedTodo.id).toBe(todo.id);
+      expect(returnedTodo.title).toBe(todo.title);
+      expect(returnedTodo.deadline).toBe(todo.deadline?.toISOString());
+      expect(returnedTodo.done).toBe(todo.done);
+      expect(returnedTodo.createdAt).toBeDefined();
+      expect("deleted" in returnedTodo).toBe(false);
+    }
+  });
+
+  it("Should not get a deleted todo", async () => {
+    const todo = await todoFactory(db, { deleted: true });
+
+    const resp = await client.todo[":id"].$get({
+      param: { id: todo.id.toString() },
+    });
+    expect(resp.status).toBe(404);
+    expect(resp.json()).rejects.toThrowError();
+  });
+
+  it("Should not get a non existent todo", async () => {
+    const todo = await todoFactory(db, { deleted: true });
+
+    const resp = await client.todo[":id"].$get({
+      param: { id: (todo.id + 1).toString() },
+    });
+    expect(resp.status).toBe(404);
+    expect(resp.json()).rejects.toThrowError();
+  });
+
+  it("Should not get a non existent todo", async () => {
+    await todoFactory(db, { deleted: true });
+
+    const resp = await client.todo[":id"].$get({
+      param: { id: "abcd" },
+    });
+    expect(resp.status).toBe(400);
+  });
+
+  it("Should delete a todo", async () => {
+    const todo = await todoFactory(db);
+    const resp = await client.todo[":id"].$delete({
+      param: { id: todo.id.toString() },
+    });
+    expect(resp.status).toBe(204);
+    expect(resp.json()).rejects.toThrowError();
+  });
+  it("Should not delete a deleted todo", async () => {
+    const todo = await todoFactory(db, { deleted: true });
+
+    const resp = await client.todo[":id"].$delete({
+      param: { id: todo.id.toString() },
+    });
+    expect(resp.status).toBe(404);
+    expect(resp.json()).rejects.toThrowError();
+  });
+
+  it("Should not delete a non existent todo", async () => {
+    const todo = await todoFactory(db, { deleted: true });
+
+    const resp = await client.todo[":id"].$delete({
+      param: { id: (todo.id + 1).toString() },
+    });
+
+    expect(resp.status).toBe(404);
+    expect(resp.json()).rejects.toThrowError();
+  });
+
+  it("Should not delete an invalid todo", async () => {
+    const todo = await todoFactory(db, { deleted: true });
+    const resp = await client.todo[":id"].$delete({
+      param: { id: "abcd" },
+    });
+    expect(resp.status).toBe(400);
   });
 });

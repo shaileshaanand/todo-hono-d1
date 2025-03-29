@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import * as schema from "./db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 export interface Env {
   DB: D1Database;
@@ -50,6 +50,44 @@ export const routes = app
         .set(c.req.valid("json"))
         .where(eq(schema.todos.id, c.req.valid("param")));
       return c.json({});
+    },
+  )
+  .get(
+    "/todo/:id",
+    zValidator("param", z.object({ id: z.string().pipe(z.coerce.number()) })),
+    async (c) => {
+      const db = drizzle(c.env.DB, { schema });
+      const todo = await db.query.todos.findFirst({
+        where: and(
+          eq(schema.todos.id, c.req.valid("param").id),
+          eq(schema.todos.deleted, false),
+        ),
+        columns: {
+          deleted: false,
+        },
+      });
+
+      console.log(todo);
+
+      if (!todo) return c.notFound();
+      return c.json<typeof todo>(todo);
+    },
+  )
+  .delete(
+    "/todo/:id",
+    zValidator("param", z.object({ id: z.string().pipe(z.coerce.number()) })),
+    async (c) => {
+      const id = c.req.valid("param").id;
+      const db = drizzle(c.env.DB, { schema });
+      const [deletedTodo] = await db
+        .update(schema.todos)
+        .set({ deleted: true })
+        .where(and(eq(schema.todos.id, id), eq(schema.todos.deleted, false)))
+        .returning();
+      if (!deletedTodo) return c.notFound();
+      return new Response(null, {
+        status: 204,
+      });
     },
   );
 
