@@ -150,7 +150,7 @@ describe("Todo tests", () => {
       param: { id: todo.id.toString() },
     });
     expect(resp.status).toBe(404);
-    expect(resp.json()).rejects.toThrowError();
+    await expect(resp.json()).rejects.toThrowError();
   });
 
   it("Should not get a non existent todo", async () => {
@@ -160,7 +160,7 @@ describe("Todo tests", () => {
       param: { id: (todo.id + 1).toString() },
     });
     expect(resp.status).toBe(404);
-    expect(resp.json()).rejects.toThrowError();
+    await expect(resp.json()).rejects.toThrowError();
   });
 
   it("Should not get a non existent todo", async () => {
@@ -178,7 +178,7 @@ describe("Todo tests", () => {
       param: { id: todo.id.toString() },
     });
     expect(resp.status).toBe(204);
-    expect(resp.json()).rejects.toThrowError();
+    await expect(resp.json()).rejects.toThrowError();
   });
   it("Should not delete a deleted todo", async () => {
     const todo = await todoFactory(db, { deleted: true });
@@ -187,7 +187,7 @@ describe("Todo tests", () => {
       param: { id: todo.id.toString() },
     });
     expect(resp.status).toBe(404);
-    expect(resp.json()).rejects.toThrowError();
+    await expect(resp.json()).rejects.toThrowError();
   });
 
   it("Should not delete a non existent todo", async () => {
@@ -198,7 +198,7 @@ describe("Todo tests", () => {
     });
 
     expect(resp.status).toBe(404);
-    expect(resp.json()).rejects.toThrowError();
+    await expect(resp.json()).rejects.toThrowError();
   });
 
   it("Should not delete an invalid todo", async () => {
