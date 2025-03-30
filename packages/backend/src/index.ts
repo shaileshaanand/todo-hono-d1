@@ -68,7 +68,7 @@ export const routes = app
       });
 
       if (!todo) return c.notFound();
-      return c.json<typeof todo>(todo);
+      return c.json(todo);
     },
   )
   .delete(
